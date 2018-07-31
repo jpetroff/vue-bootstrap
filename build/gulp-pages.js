@@ -3,6 +3,7 @@ var through = require('through2')
 var fs = require('fs')
 var path = require('path')
 var _ = require('underscore')
+var livereload = require('gulp-livereload')
 
 var layoutsCache = {}
 
@@ -48,4 +49,5 @@ gulp.task('pages', function() {
 			layout: 'src/layouts/default.html'
 		}))
 		.pipe(gulp.dest(out + '/pages/'))
+		.pipe(livereload())
 });

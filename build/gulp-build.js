@@ -13,6 +13,7 @@ var remember = require('gulp-remember')
 var vueExtract = require('./gulp-vue-extract')
 var wrapjs = require('./gulp-jswrapper')
 var print = require('gulp-print')
+var livereload = require('gulp-livereload')
 
 var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 
@@ -27,6 +28,7 @@ gulp.task('js-libs', function(){
 		])
 		.pipe(concat('libs.js'))
 		.pipe(gulp.dest(out + '/js'))
+		.pipe(livereload());
 });
 
 gulp.task('js-build', function(){
@@ -51,6 +53,7 @@ gulp.task('js-build', function(){
 		], {base: base}))
 		.pipe(concat('app.js'))
 		.pipe(gulp.dest(out + '/js'))
+		.pipe(livereload())
 
 });
 
@@ -80,12 +83,14 @@ gulp.task('less', function(){
 		],{base: base}))
 		.pipe(concat('main.css'))
 		.pipe(sourcemaps.write())
-		.pipe(gulp.dest(out + '/css'));
+		.pipe(gulp.dest(out + '/css'))
+		.pipe(livereload());
 })
 
 gulp.task('assets', function() {
 	gulp.src(__src + '/assets/**/*')
-		.pipe(gulp.dest(out));
+		.pipe(gulp.dest(out))
+		.pipe(livereload());
 });
 
 

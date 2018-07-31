@@ -1,6 +1,6 @@
 var gulp = require('gulp')
 var express = require('express')
-var livereload = require('livereload')
+var livereload = require('gulp-livereload')
 var path = require('path')
 
 function run(gulpTask) {
@@ -12,8 +12,7 @@ function run(gulpTask) {
 }
 
 gulp.task('server', function() {
-	var lr = livereload.createServer()
-	lr.watch(out);
+	livereload.listen();
 
 	gulp.watch('/libs/js/*.js', {cwd: base}, run('js-libs') );
 
@@ -30,20 +29,5 @@ gulp.task('server', function() {
 
 	gulp.watch(['pages/*.html', 'layouts/*.html'], {cwd: base}, run('pages'));
 
-	// var wAssets = gulp.watch('assets/**/*.*', {cwd: base}, ['assets'])
-	// changeLog(wAssets, 'assets');
 	gulp.watch('assets/**/*', { cwd: __src }, run('assets'));
-
-
-	var app = express()
-
-	app.use(express.static(out))
-
-	app.get('/', function(req, res) {
-		res.sendFile(out + '/pages/index.html')
-	})
-
-	app.listen('8000', '0.0.0.0', function() {
-		console.log('express has took off')
-	})
 })
