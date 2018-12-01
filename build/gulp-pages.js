@@ -33,7 +33,7 @@ var gulpCustomTemplate = function(_opts) {
 		}
 		if (file.isBuffer()) {
 			var contents = file.contents
-			var result = layoutTmp({content: contents, local: !PROD})
+			var result = layoutTmp({content: contents, local: !PROD, projectDir: (LIVE ? '/'+live_dir : '')})
 
 			file.contents = new Buffer(result)
 		}
@@ -48,6 +48,6 @@ gulp.task('pages', function() {
 		.pipe(gulpCustomTemplate({
 			layout: 'src/layouts/default.html'
 		}))
-		.pipe(gulp.dest(out + '/pages/'))
+		.pipe(gulp.dest(destdir))
 		.pipe(livereload())
 });

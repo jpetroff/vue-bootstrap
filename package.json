@@ -4,7 +4,7 @@
   "devDependencies": {
     "express": "latest",
     "fs-extra": "latest",
-    "gulp": "*",
+    "gulp": "latest",
     "gulp-cached": "^1.1.0",
     "gulp-concat": "^2.6.0",
     "gulp-less": "^3.1.0",

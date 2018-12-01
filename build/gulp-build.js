@@ -18,7 +18,7 @@ var livereload = require('gulp-livereload')
 var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 
 gulp.task('js-libs', function(){
-	var basejs = base + '/libs/js/'
+	var basejs = base + '/libs/js/';
 
 	gulp.src([
 			basejs + 'vue.min.js',
@@ -27,7 +27,7 @@ gulp.task('js-libs', function(){
 			basejs + 'underscore-min.js'
 		])
 		.pipe(concat('libs.js'))
-		.pipe(gulp.dest(out + '/js'))
+		.pipe(gulp.dest(destdir + '/js'))
 		.pipe(livereload());
 });
 
@@ -52,12 +52,25 @@ gulp.task('js-build', function(){
 			'js/main.js'
 		], {base: base}))
 		.pipe(concat('app.js'))
-		.pipe(gulp.dest(out + '/js'))
+		.pipe(gulp.dest(destdir + '/js'))
 		.pipe(livereload())
 
 });
 
 gulp.task('less', function(){
+	var lessConfig = {
+		paths: ['.'],
+		plugins: [autoprefix],
+		rewriteUrls: 'all',
+		rootpath: '/'
+	};
+	console.log(LIVE);
+	if(LIVE) {
+		lessConfig.rootpath = '/'+live_dir+'/';
+		lessConfig.rewriteUrls = 'all';
+	}
+
+
 	gulp.src([
 		base + '/less/**/*.less',
 		base + '/components/*.less',
@@ -70,10 +83,7 @@ gulp.task('less', function(){
 		// 	type:'style'
 		// }))
 		.pipe(sourcemaps.init())
-		.pipe(less({
-			paths: ['.'],
-			plugins: [autoprefix]
-		}))
+		.pipe(less(lessConfig))
 		.pipe(remember('less'))
 		.pipe(order([
 			'libs/css/normalize.css',
@@ -83,13 +93,13 @@ gulp.task('less', function(){
 		],{base: base}))
 		.pipe(concat('main.css'))
 		.pipe(sourcemaps.write())
-		.pipe(gulp.dest(out + '/css'))
+		.pipe(gulp.dest(destdir + '/css'))
 		.pipe(livereload());
 })
 
 gulp.task('assets', function() {
 	gulp.src(__src + '/assets/**/*')
-		.pipe(gulp.dest(out))
+		.pipe(gulp.dest(destdir))
 		.pipe(livereload());
 });
 

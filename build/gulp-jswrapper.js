@@ -9,8 +9,14 @@ module.exports = wrapjs = function(_opts) {
 			return cb();
 		}
 		if (file.isBuffer()) {
-			var prepend = new Buffer('(function(w){\n"use strict";\n// File '+file.path+'\n\n')
-			var append = new Buffer('\n// End of '+file.path+'\n})(window);')
+			var prepend = new Buffer('');
+			var append = new Buffer('');
+
+			if (!(LIVE || PROD)) {
+				var prepend = new Buffer('(function(w){\n"use strict";\n// File '+file.path+'\n\n')
+				var append = new Buffer('\n// End of '+file.path+'\n})(window);')
+			}
+
 			file.contents = Buffer.concat([prepend,file.contents,append])
 		}
 		this.push(file);
