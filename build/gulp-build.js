@@ -20,7 +20,7 @@ var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 gulp.task('js-libs', function(){
 	var basejs = base + '/libs/js/';
 
-	gulp.src([
+	return gulp.src([
 			basejs + 'vue.min.js',
 			basejs + 'vuelidate.min.js',
 			basejs + 'validators.min.js',
@@ -32,7 +32,7 @@ gulp.task('js-libs', function(){
 });
 
 gulp.task('js-build', function(){
-	gulp.src([
+	return gulp.src([
 		base+'/js/*.js',
 		base+'/components/*.vue', 
 		base+'/apps/*.vue'
@@ -71,7 +71,7 @@ gulp.task('less', function(){
 	}
 
 
-	gulp.src([
+	return gulp.src([
 		base + '/less/**/*.less',
 		base + '/components/*.less',
 		base + '/apps/*.less',
@@ -98,7 +98,7 @@ gulp.task('less', function(){
 })
 
 gulp.task('assets', function() {
-	gulp.src(__src + '/assets/**/*')
+	return gulp.src(__src + '/assets/**/*')
 		.pipe(gulp.dest(destdir))
 		.pipe(livereload());
 });

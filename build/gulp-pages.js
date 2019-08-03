@@ -9,6 +9,11 @@ var layoutsCache = {}
 
 var invalidateCache = true;
 
+var preprocessHTML = function(contents) {
+	var newContents = contents.replace(/\/(img|fonts)/g, '/'+live_dir+'/$1');
+	return newContents;
+}
+
 var gulpCustomTemplate = function(_opts) {
 	var stream
 	var layoutTmp = null
@@ -32,7 +37,12 @@ var gulpCustomTemplate = function(_opts) {
 			return cb();
 		}
 		if (file.isBuffer()) {
-			var contents = file.contents
+			var contents = file.contents.toString();
+
+			if(LIVE) {
+				contents = preprocessHTML(contents);
+			}
+
 			var result = layoutTmp({content: contents, local: !PROD, projectDir: (LIVE ? '/'+live_dir : '')})
 
 			file.contents = new Buffer(result)

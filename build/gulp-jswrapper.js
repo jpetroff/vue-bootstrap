@@ -9,8 +9,8 @@ module.exports = wrapjs = function(_opts) {
 			return cb();
 		}
 		if (file.isBuffer()) {
-			var prepend = new Buffer('');
-			var append = new Buffer('');
+			var prepend = new Buffer('(function(w){\n"use strict";\n\n');
+			var append = new Buffer('\n\n})(window);');
 
 			if (!(LIVE || PROD)) {
 				var prepend = new Buffer('(function(w){\n"use strict";\n// File '+file.path+'\n\n')

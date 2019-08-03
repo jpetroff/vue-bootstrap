@@ -4,11 +4,15 @@ var livereload = require('gulp-livereload')
 var path = require('path')
 
 function run(gulpTask) {
-	var taskString = (typeof gulpTask === 'string') ? gulpTask : gulpTask.join(',');
-	return function(ev) {
-		console.log('[ ' + taskString + ' ] → File ' + path.relative(base, ev.path) + ' was ' + ev.type);
-		gulp.start(gulpTask);
-	}
+	return gulp.parallel(gulpTask);
+
+	// @TODO: find way to log events
+
+	// var taskString = (typeof gulpTask === 'string') ? gulpTask : gulpTask.join(',');
+	// return function(ev) {
+	// 	console.log('[ ' + taskString + ' ] → File ' + path.relative(base, ev.path) + ' was ' + ev.type);
+	// 	gulp.start(gulpTask);
+	// }
 }
 
 gulp.task('server', function() {

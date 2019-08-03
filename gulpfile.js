@@ -15,6 +15,6 @@ require(__src + '/build/gulp-build');
 require(__src + '/build/gulp-server');
 require(__src + '/build/gulp-pages');
 
-gulp.task('start', ['build','server'])
-gulp.task('build', ['js-libs', 'js-build', 'less', 'pages', 'assets'])
+gulp.task('build', gulp.parallel('js-libs', 'js-build', 'less', 'pages', 'assets'));
+gulp.task('start', gulp.series('build','server'));
 
