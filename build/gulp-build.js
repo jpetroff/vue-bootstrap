@@ -21,7 +21,9 @@ var buffer = require('vinyl-buffer');
 
 var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 
-gulp.task('js-libs', function(){
+const vendors = ['vue', 'underscore'];
+
+gulp.task('js:libs', function(){
 	var basejs = base + '/libs/js/';
 
 	return gulp.src([
@@ -35,7 +37,7 @@ gulp.task('js-libs', function(){
 		.pipe(livereload());
 });
 
-gulp.task('js-build', function(){
+gulp.task('js:app', function(){
 	return gulp.src([
 		base+'/js/*.js',
 		base+'/components/*.vue', 
@@ -76,9 +78,6 @@ gulp.task('less', function(){
 
 
 	return gulp.src([
-		// base + '/less/**/*.less',
-		// base + '/components/*.less',
-		// base + '/apps/*.less',
 		base + '/libs/css/normalize.css',
 		base + '/less/main.less'
 	])
@@ -103,7 +102,7 @@ gulp.task('assets', function() {
 
 // TYPESCRIPT
 
-gulp.task('vue-extract-js', function() {
+gulp.task('--vue-extract-js', function() {
 	return gulp.src([
 		base + '/components/**/*.vue'
 	])
@@ -117,7 +116,7 @@ gulp.task('vue-extract-js', function() {
 	.pipe(gulp.dest(base + '/components'))
 });
 
-gulp.task('ts-build', function() {
+gulp.task('ts:all', function() {
 	return browserify({
 			basedir: '.',
 			debug: true,
@@ -133,13 +132,14 @@ gulp.task('ts-build', function() {
 		.bundle()
 		.pipe(source('bundle.js'))
 		.pipe(buffer())
+		.pipe(uglify())
 		.pipe(sourcemaps.init({loadMaps: true}))
 		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest(destdir + '/ts'))
 		.pipe(livereload());
 });
 
-gulp.task('es6-build', gulp.series('vue-extract-js', function(cb) {
+gulp.task('es6:app', gulp.series('--vue-extract-js', function(cb) {
 		return browserify({
 			basedir: '.',
 			debug: true,
@@ -147,11 +147,12 @@ gulp.task('es6-build', gulp.series('vue-extract-js', function(cb) {
 			cache: {},
 			packageCache: {}
 		})
+		.external(vendors) // Specify all vendors as external source
 		.transform('babelify', {
 				presets: ['es2015']
 		})
 		.bundle()
-		.pipe(source('bundle.js'))
+		.pipe(source('app.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({loadMaps: true}))
 		.pipe(sourcemaps.write('./'))
@@ -159,6 +160,25 @@ gulp.task('es6-build', gulp.series('vue-extract-js', function(cb) {
 		.pipe(livereload());	
 	})
 );
+
+gulp.task('es6:libs', () => {
+	const b = browserify({
+		debug: true
+	});
+
+	// require all libs specified in vendors array
+	vendors.forEach(lib => {
+		b.require(lib);
+	});
+
+	return b.bundle()
+	.pipe(source('libs.js'))
+	.pipe(buffer())
+	.pipe(uglify())
+	.pipe(sourcemaps.init({loadMaps: true}))
+	.pipe(sourcemaps.write('./'))
+	.pipe(gulp.dest(destdir + '/js'));
+});
 
 
 
