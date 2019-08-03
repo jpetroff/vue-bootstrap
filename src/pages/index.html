@@ -1,3 +1,7 @@
 
-<div id="form-test"></div>
-<div id="popup"></div>
+<div id="popup">
+	<a href="#" @click.prevent="showModal = true">Open</a>
+	<popup-modal v-show="showModal" @close="showModal = false">
+		<div slot="body" >Text</div>
+	</popup-modal>
+</div>

@@ -31,7 +31,11 @@
 </template>
 
 <script>
-w.Components['popup-modal'] = {
+import Vue from 'vue';
+console.log('popup');
+
+Vue.component('popup-modal', 
+{
 	template: "<%=template%>"
-}
+});
 </script>

@@ -20,13 +20,16 @@
 </template>
 
 <script type="text/javascript">
-w.Components['text-field'] = {
+import Vue from 'vue';
+
+Vue.component('text-field', 
+{
 	template: '<%=template%>',
 	props: [
 		'label',
 		'label-error',
 		'value',
-		'validator'
+		'validator' 
 	],
 	created: function() {
 		this.triggerError = _.debounce(_.bind(this.validator.$touch, this), 500)
@@ -52,5 +55,5 @@ w.Components['text-field'] = {
 			this.triggerError()
 		}
 	}
-}
+});
 </script>

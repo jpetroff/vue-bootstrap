@@ -15,6 +15,10 @@ var wrapjs = require('./gulp-jswrapper')
 var print = require('gulp-print')
 var livereload = require('gulp-livereload')
 
+var browserify = require('browserify');
+var tsify = require('tsify');
+var buffer = require('vinyl-buffer');
+
 var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 
 gulp.task('js-libs', function(){
@@ -72,29 +76,23 @@ gulp.task('less', function(){
 
 
 	return gulp.src([
-		base + '/less/**/*.less',
-		base + '/components/*.less',
-		base + '/apps/*.less',
-		base + '/libs/css/normalize.css'
+		// base + '/less/**/*.less',
+		// base + '/components/*.less',
+		// base + '/apps/*.less',
+		base + '/libs/css/normalize.css',
+		base + '/less/main.less'
 	])
-		.pipe(cache('less'))
-		.pipe(print())
-		// .pipe(vueExtract({
-		// 	type:'style'
-		// }))
-		.pipe(sourcemaps.init())
-		.pipe(less(lessConfig))
-		.pipe(remember('less'))
-		.pipe(order([
-			'libs/css/normalize.css',
-			'components/*.less',
-			'apps/*.less',
-			'less/**/*.less'
-		],{base: base}))
-		.pipe(concat('main.css'))
-		.pipe(sourcemaps.write())
-		.pipe(gulp.dest(destdir + '/css'))
-		.pipe(livereload());
+	.pipe(sourcemaps.init())
+	.pipe(print())
+	.pipe(less(lessConfig))
+	.pipe(order([
+		'libs/css/normalize.css',
+		'less/main.less'
+	],{base: base}))
+	.pipe(concat('main.css'))
+	.pipe(sourcemaps.write('./'))
+	.pipe(gulp.dest(destdir + '/css'))
+	.pipe(livereload());
 })
 
 gulp.task('assets', function() {
@@ -102,6 +100,66 @@ gulp.task('assets', function() {
 		.pipe(gulp.dest(destdir))
 		.pipe(livereload());
 });
+
+// TYPESCRIPT
+
+gulp.task('vue-extract-js', function() {
+	return gulp.src([
+		base + '/components/**/*.vue'
+	])
+	.pipe(cache('vue-js'))
+	.pipe(print())
+	.pipe(vueExtract({
+		type:'script',
+		storeTemplate: 'inline'
+	}))
+	.pipe(remember('vue-js'))
+	.pipe(gulp.dest(base + '/components'))
+});
+
+gulp.task('ts-build', function() {
+	return browserify({
+			basedir: '.',
+			debug: true,
+			entries: ['src/ts/main.ts'],
+			cache: {},
+			packageCache: {}
+		})
+		.plugin(tsify)
+		.transform('babelify', {
+				presets: ['es2015'],
+				extensions: ['.ts']
+		})
+		.bundle()
+		.pipe(source('bundle.js'))
+		.pipe(buffer())
+		.pipe(sourcemaps.init({loadMaps: true}))
+		.pipe(sourcemaps.write('./'))
+		.pipe(gulp.dest(destdir + '/ts'))
+		.pipe(livereload());
+});
+
+gulp.task('es6-build', gulp.series('vue-extract-js', function(cb) {
+		return browserify({
+			basedir: '.',
+			debug: true,
+			entries: ['src/es6/main.js'],
+			cache: {},
+			packageCache: {}
+		})
+		.transform('babelify', {
+				presets: ['es2015']
+		})
+		.bundle()
+		.pipe(source('bundle.js'))
+		.pipe(buffer())
+		.pipe(sourcemaps.init({loadMaps: true}))
+		.pipe(sourcemaps.write('./'))
+		.pipe(gulp.dest(destdir + '/js'))
+		.pipe(livereload());	
+	})
+);
+
 
 
 

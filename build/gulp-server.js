@@ -15,7 +15,7 @@ function run(gulpTask) {
 	// }
 }
 
-gulp.task('server', function() {
+gulp.task('server', function(cb) {
 	livereload.listen();
 
 	gulp.watch('/libs/js/*.js', {cwd: base}, run('js-libs') );
@@ -26,6 +26,12 @@ gulp.task('server', function() {
 	], {cwd: base}, run('js-build'));
 
 	gulp.watch([
+		'es6/**/*.js',
+		'apps/**/*.js',
+		'components/**/*.vue'
+	], {cwd: base}, run('es6-build'));
+
+	gulp.watch([
 		'less/**/*.less',
 		'components/**/*.less',
 		'apps/**/*.less'
@@ -34,4 +40,6 @@ gulp.task('server', function() {
 	gulp.watch(['pages/*.html', 'layouts/*.html'], {cwd: base}, run('pages'));
 
 	gulp.watch('assets/**/*', { cwd: __src }, run('assets'));
+
+	cb();
 })
