@@ -18,12 +18,12 @@ function run(gulpTask) {
 gulp.task('server', function(cb) {
 	livereload.listen();
 
-	gulp.watch('/libs/js/*.js', {cwd: base}, run('js:libs') );
+	// gulp.watch('/libs/js/*.js', {cwd: base}, run('js:libs') );
 
-	gulp.watch([
-		'js/**/*.js',
-		'**/*.vue'
-	], {cwd: base}, run('js:app'));
+	// gulp.watch([
+	// 	'js/**/*.js',
+	// 	'**/*.vue'
+	// ], {cwd: base}, run('js:app'));
 
 	gulp.watch([
 		'es6/**/*.js',

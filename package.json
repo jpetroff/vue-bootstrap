@@ -2,7 +2,7 @@
   "name": "rm-stripe-vue-demo",
   "version": "0.0.1",
   "browser": {
-    "vue": "vue/dist/vue.common.js"
+    "vue": "vue/dist/vue.min.js"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

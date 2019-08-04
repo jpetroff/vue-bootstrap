@@ -177,7 +177,8 @@ gulp.task('es6:libs', () => {
 	.pipe(uglify())
 	.pipe(sourcemaps.init({loadMaps: true}))
 	.pipe(sourcemaps.write('./'))
-	.pipe(gulp.dest(destdir + '/js'));
+	.pipe(gulp.dest(destdir + '/js'))
+	// .pipe(livereload());
 });
 
 

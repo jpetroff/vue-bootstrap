@@ -1,7 +1,7 @@
 
 <div id="popup">
 	<a href="#" @click.prevent="showModal = true">Open</a>
-	<popup-modal v-show="showModal" @close="showModal = false">
+	<popup-modal v-show="showModal" @close="showModal = false" animation-type="back" shadow-size="4">
 		<div slot="body" >Text</div>
 	</popup-modal>
 </div>
