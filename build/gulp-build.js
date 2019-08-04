@@ -21,7 +21,7 @@ var buffer = require('vinyl-buffer');
 
 var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 
-const vendors = ['vue', 'underscore'];
+const vendors = ['vue', 'underscore', 'promise-polyfill', 'whatwg-fetch'];
 
 gulp.task('js:libs', function(){
 	var basejs = base + '/libs/js/';

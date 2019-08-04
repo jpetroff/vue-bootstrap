@@ -32,6 +32,7 @@
     "livereload": "^0.6.0",
     "minimatch": "latest",
     "path": "latest",
+    "promise-polyfill": "^8.1.3",
     "tsify": "^4.0.1",
     "typescript": "^3.5.3",
     "uglify": "^0.1.5",
@@ -40,7 +41,8 @@
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0",
     "vue": "^2.6.10",
-    "vuejs": "^3.0.1"
+    "vuejs": "^3.0.1",
+    "whatwg-fetch": "^3.0.0"
   },
   "dependencies": {
     "@types/underscore": "^1.9.2",
