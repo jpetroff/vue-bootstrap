@@ -78,16 +78,11 @@ gulp.task('less', function(){
 
 
 	return gulp.src([
-		base + '/libs/css/normalize.css',
 		base + '/less/main.less'
 	])
 	.pipe(sourcemaps.init())
 	.pipe(print())
 	.pipe(less(lessConfig))
-	.pipe(order([
-		'libs/css/normalize.css',
-		'less/main.less'
-	],{base: base}))
 	.pipe(concat('main.css'))
 	.pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(destdir + '/css'))
@@ -140,24 +135,24 @@ gulp.task('ts:all', function() {
 });
 
 gulp.task('es6:app', gulp.series('--vue-extract-js', function(cb) {
-		return browserify({
-			basedir: '.',
-			debug: true,
-			entries: ['src/es6/main.js'],
-			cache: {},
-			packageCache: {}
-		})
-		.external(vendors) // Specify all vendors as external source
-		.transform('babelify', {
-				presets: ['es2015']
-		})
-		.bundle()
-		.pipe(source('app.js'))
-		.pipe(buffer())
-		.pipe(sourcemaps.init({loadMaps: true}))
-		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest(destdir + '/js'))
-		.pipe(livereload());	
+	return browserify({
+		basedir: '.',
+		debug: true,
+		entries: ['src/es6/main.js'],
+		cache: {},
+		packageCache: {}
+	})
+	.external(vendors) // Specify all vendors as external source
+	.transform('babelify', {
+			presets: ['es2015']
+	})
+	.bundle()
+	.pipe(source('app.js'))
+	.pipe(buffer())
+	.pipe(sourcemaps.init({loadMaps: true}))
+	.pipe(sourcemaps.write('./'))
+	.pipe(gulp.dest(destdir + '/js'))
+	.pipe(livereload());	
 	})
 );
 
