@@ -15,7 +15,7 @@ function run(gulpTask) {
 	// }
 }
 
-gulp.task('server', function(cb) {
+gulp.task('watch', function(cb) {
 	livereload.listen();
 
 	// gulp.watch('/libs/js/*.js', {cwd: base}, run('js:libs') );
@@ -27,17 +27,22 @@ gulp.task('server', function(cb) {
 
 	gulp.watch([
 		'es6/**/*.js',
-		'components/**/*.vue'
-	], {cwd: base}, run('es6:app'));
+		'es6/**/*.jsx',
+		'es6/**/*.tsx',
+		'es6/**/*.ts',
+		'components/**/*.vue',
+		'components/**/*.jsx',
+		'components/**/*.tsx',
+	], {cwd: gulpConfig.dirs.source}, run('es6:app'));
 
 	gulp.watch([
 		'less/**/*.less',
 		'components/**/*.less',
-	], {cwd: base}, run('less'));
+	], {cwd: gulpConfig.dirs.source}, run('less'));
 
-	gulp.watch(['pages/*.html', 'layouts/*.html'], {cwd: base}, run('pages'));
+	gulp.watch(['pages/*.html', 'layouts/*.html'], {cwd: gulpConfig.dirs.source}, run('pages'));
 
-	gulp.watch('assets/**/*', { cwd: __src }, run('assets'));
+	gulp.watch('assets/**/*', { cwd: gulpConfig.dirs.root }, run('assets'));
 
 	cb();
 })

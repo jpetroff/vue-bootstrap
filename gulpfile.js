@@ -8,17 +8,43 @@ global.LIVE = (process.env.PROD == '2');
 global.destdir = LIVE ? live : out;
 
 var gulp = require('gulp');
+var path = require('path');
+var _ = require('underscore');
 
-console.log('Mode: ' + PROD + ', Destination Directory: ' + destdir);
+const gulpConfigJson = require('./gulpconfig.json');
 
-require(__src + '/build/gulp-build');
-require(__src + '/build/gulp-server');
-require(__src + '/build/gulp-pages');
+global.gulpConfig = _.extend(gulpConfigJson, {
+	dirs: {
+		root: __dirname,
+		source: path.join(__dirname, gulpConfigJson.dirs.source),
+		build: path.join(__dirname, gulpConfigJson.dirs.build),
+		live: path.join(__dirname, gulpConfigJson.dirs.live),
+	},
+	stack: ['vue', 'vue/ts', 'react', 'react/ts'].indexOf(gulpConfigJson.stack) != -1 ? gulpConfigJson.stack : 'vue',
+	output: ['dev', 'live'].indexOf(gulpConfigJson.output) != -1 ? gulpConfigJson.output : 'dev'
+});
+gulpConfig.dest = gulpConfig.output == 'dev' ? gulpConfig.dirs.build : gulpConfig.dirs.live;
+gulpConfig.ts = gulpConfig.stack.indexOf('/ts') != -1;
 
-gulp.task('build', gulp.parallel('js:libs', 'js:app', 'less', 'pages', 'assets'));
-gulp.task('build.es6', gulp.parallel('es6:libs', 'es6:app', 'less', 'pages', 'assets'));
-gulp.task('build.ts', gulp.parallel('ts:all', 'less', 'pages', 'assets'));
+console.log(gulpConfig);
 
-gulp.task('start', gulp.series('build','server'));
-gulp.task('start.es6', gulp.series('build.es6','server'));
+require(gulpConfig.dirs.root + '/build/gulp-build');
+require(gulpConfig.dirs.root + '/build/gulp-watch');
+require(gulpConfig.dirs.root + '/build/gulp-pages');
+
+var buildSequence = [];
+switch(gulpConfig.stack) {
+	case 'vue':
+		buildSequence = ['es6:libs', 'es6:app', 'less', 'pages', 'assets']; break;
+	case 'vue/ts':
+		buildSequence = ['es6:libs', 'es6:app', 'less', 'pages', 'assets']; break;
+	case 'react': //@TODO
+		buildSequence = ['es6:libs', 'es6:app', 'less', 'pages', 'assets']; break;
+	case 'react/ts': //@TODO
+		buildSequence = ['es6:libs', 'es6:app', 'less', 'pages', 'assets']; break;
+}
+
+gulp.task('build', gulp.parallel(...buildSequence));
+
+gulp.task('start', gulp.series('build','watch'));
 

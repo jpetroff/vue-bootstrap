@@ -21,71 +21,28 @@ var buffer = require('vinyl-buffer');
 
 var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 
-const vendors = ['vue', 'underscore', 'promise-polyfill', 'whatwg-fetch'];
+var vendors = ['underscore', 'promise-polyfill', 'whatwg-fetch'];
+if(['vue', 'vue/ts'].indexOf(gulpConfig.stack) != -1) vendors.push['vue'];
+if(['react', 'react/ts'].indexOf(gulpConfig.stack) != -1) vendors.push['react', 'react-dom'];
 
-gulp.task('js:libs', function(){
-	var basejs = base + '/libs/js/';
-
-	return gulp.src([
-			basejs + 'vue.min.js',
-			basejs + 'vuelidate.min.js',
-			basejs + 'validators.min.js',
-			basejs + 'underscore-min.js'
-		])
-		.pipe(concat('libs.js'))
-		.pipe(gulp.dest(destdir + '/js'))
-		.pipe(livereload());
-});
-
-gulp.task('js:app', function(){
-	return gulp.src([
-		base+'/js/*.js',
-		base+'/components/*.vue', 
-		base+'/apps/*.vue'
-	])
-		.pipe(vueExtract({
-			type:'script',
-			storeTemplate: 'inline'
-		}))
-		.pipe(cache('js-build'))
-		.pipe(print())
-		.pipe(wrapjs())
-		.pipe(remember('js-build'))
-		.pipe(order([
-			'js/preamble.js',
-			'components/*.js',
-			'apps/*.js',
-			'js/main.js'
-		], {base: base}))
-		.pipe(concat('app.js'))
-		.pipe(gulp.dest(destdir + '/js'))
-		.pipe(livereload())
-
-});
-
+// done
 gulp.task('less', function(){
 	var lessConfig = {
 		paths: ['.'],
 		plugins: [autoprefix],
 		rewriteUrls: 'all',
-		rootpath: '/'
+		rootpath: (gulpConfig.serverPath && gulpConfig.serverPath != '') ? `/${gulpConfig.serverPath}/` : '/'
 	};
-	console.log(LIVE);
-	if(LIVE) {
-		lessConfig.rootpath = '/'+live_dir+'/';
-		lessConfig.rewriteUrls = 'all';
-	}
-
 
 	return gulp.src([
-		base + '/less/main.less'
+		gulpConfig.dirs.source + '/less/main.less'
 	])
 	.pipe(sourcemaps.init())
 	.pipe(print())
 	.pipe(less(lessConfig))
 	.pipe(concat('main.css'))
 	.pipe(sourcemaps.write('./'))
-	.pipe(gulp.dest(destdir + '/css'))
+	.pipe(gulp.dest(gulpConfig.dest + '/css'))
 	.pipe(livereload());
 })
 
@@ -95,11 +52,11 @@ gulp.task('assets', function() {
 		.pipe(livereload());
 });
 
-// TYPESCRIPT
 
+//done
 gulp.task('--vue-extract-js', function() {
 	return gulp.src([
-		base + '/components/**/*.vue'
+		gulpConfig.dirs.source + '/components/**/*.vue'
 	])
 	.pipe(cache('vue-js'))
 	.pipe(print())
@@ -108,7 +65,7 @@ gulp.task('--vue-extract-js', function() {
 		storeTemplate: 'inline'
 	}))
 	.pipe(remember('vue-js'))
-	.pipe(gulp.dest(base + '/components'))
+	.pipe(gulp.dest(gulpConfig.dirs.source + '/components'))
 });
 
 gulp.task('ts:all', function() {
@@ -130,50 +87,71 @@ gulp.task('ts:all', function() {
 		.pipe(uglify())
 		.pipe(sourcemaps.init({loadMaps: true}))
 		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest(destdir + '/ts'))
+		.pipe(gulp.dest(gulpConfig.dest + '/ts'))
 		.pipe(livereload());
 });
 
-gulp.task('es6:app', gulp.series('--vue-extract-js', function(cb) {
-	return browserify({
+var seriesPrefixJobs = [];
+switch(gulpConfig.stack) {
+	case 'vue':
+	case 'vue/ts':
+		seriesPrefixJobs = ['--vue-extract-js']; break;
+}
+gulp.task('es6:app', gulp.series(...seriesPrefixJobs, function(cb) {
+
+	var sourceExt = '.js';
+	if(gulpConfig.stack == 'vue/ts') {sourceExt = '.ts'}
+	else if(gulpConfig.stack == 'react') {sourceExt = '.jsx'}
+	else if(gulpConfig.stack == 'react/ts') {sourceExt = '.tsx'}
+
+	var babelPresets = ['@babel/preset-env'];
+	if(gulpConfig.stack == 'react' || gulpConfig.stack == 'react/ts') {babelPresets.push('@babel/preset-react')};
+
+	var output = browserify({
 		basedir: '.',
 		debug: true,
-		entries: ['src/es6/main.js'],
+		entries: [`src/es6/main${sourceExt}`],
 		cache: {},
 		packageCache: {}
-	})
-	.external(vendors) // Specify all vendors as external source
+	});
+
+	// console.log(gulpConfig.stack == 'react' || gulpConfig.stack == 'react/ts', babelPresets);
+
+	if(gulpConfig.ts) {
+		output.plugin(tsify, {target: 'es6'});
+	}
+
+	return output.external(vendors) // Specify all vendors as external source
 	.transform('babelify', {
-			presets: ['es2015']
+			presets: babelPresets
 	})
 	.bundle()
 	.pipe(source('app.js'))
 	.pipe(buffer())
 	.pipe(sourcemaps.init({loadMaps: true}))
 	.pipe(sourcemaps.write('./'))
-	.pipe(gulp.dest(destdir + '/js'))
-	.pipe(livereload());	
-	})
-);
+	.pipe(gulp.dest(gulpConfig.dest + '/js'))
+	.pipe(livereload());
+}));
 
+// done
 gulp.task('es6:libs', () => {
-	const b = browserify({
+	var bundle = browserify({
 		debug: true
 	});
 
 	// require all libs specified in vendors array
 	vendors.forEach(lib => {
-		b.require(lib);
+		bundle.require(lib);
 	});
 
-	return b.bundle()
+	return bundle.bundle()
 	.pipe(source('libs.js'))
 	.pipe(buffer())
 	.pipe(uglify())
 	.pipe(sourcemaps.init({loadMaps: true}))
 	.pipe(sourcemaps.write('./'))
-	.pipe(gulp.dest(destdir + '/js'))
-	// .pipe(livereload());
+	.pipe(gulp.dest(gulpConfig.dest + '/js'))
 });
 
 
