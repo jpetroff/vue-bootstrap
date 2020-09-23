@@ -1,0 +1,24 @@
+<vue>
+<template class="{{{component-name}}}">
+	<div class="§">
+		
+	</div>
+</template>
+
+
+<script>
+import Vue from 'vue';
+
+Vue.component('{{{component-name}}}', {
+	template: '<%=template%>'
+});
+</script>
+</vue>
+
+<less>
+@import '../../less/_constants.less';
+
+.{{{component-name}}} {
+	box-sizing: border-box;
+}
+</less>

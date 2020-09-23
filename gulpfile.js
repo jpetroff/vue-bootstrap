@@ -1,11 +1,11 @@
-global.__src = __dirname
-global.base = __dirname + '/src';
-global.out = __dirname + '/public';
-global.live = __dirname + '/live';
-global.live_dir = 'vue-bootstrap';
+// global.__src = __dirname
+// global.base = __dirname + '/src';
+// global.out = __dirname + '/public';
+// global.live = __dirname + '/live';
+// global.live_dir = 'vue-bootstrap';
 global.PROD = (process.env.PROD == '1' || process.env.PROD == '2');
 global.LIVE = (process.env.PROD == '2');
-global.destdir = LIVE ? live : out;
+// global.destdir = LIVE ? live : out;
 
 var gulp = require('gulp');
 var path = require('path');
@@ -31,6 +31,7 @@ console.log(gulpConfig);
 require(gulpConfig.dirs.root + '/build/gulp-build');
 require(gulpConfig.dirs.root + '/build/gulp-watch');
 require(gulpConfig.dirs.root + '/build/gulp-pages');
+require(gulpConfig.dirs.root + '/build/gulp-add-component');
 
 var buildSequence = [];
 switch(gulpConfig.stack) {

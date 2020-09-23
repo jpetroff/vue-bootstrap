@@ -10,7 +10,7 @@ var layoutsCache = {}
 var invalidateCache = true;
 
 var preprocessHTML = function(contents) {
-	var newContents = contents.replace(/\/(img|fonts)/g, '/'+live_dir+'/$1');
+	var newContents = contents.replace(/\/(img|fonts)/g, '/'+gulpConfig.serverPath+'/$1');
 	return newContents;
 }
 
@@ -19,7 +19,7 @@ var gulpCustomTemplate = function(_opts) {
 	var layoutTmp = null
 
 	if (!layoutsCache[_opts.layout] || invalidateCache) {
-		var text = fs.readFileSync(path.join(__src, _opts.layout))
+		var text = fs.readFileSync(path.join(gulpConfig.dirs.root, _opts.layout))
 		text = text.toString()
 
 		if (text) {
@@ -43,9 +43,9 @@ var gulpCustomTemplate = function(_opts) {
 				contents = preprocessHTML(contents);
 			}
 
-			var result = layoutTmp({content: contents, local: !PROD, projectDir: (LIVE ? '/'+live_dir : '')})
+			var result = layoutTmp({content: contents, local: !PROD, projectDir: (LIVE ? '/'+gulpConfig.dirs.live : '')})
 
-			file.contents = new Buffer(result)
+			file.contents = new Buffer.from(result)
 		}
 		this.push(file);
 		return cb();
@@ -54,10 +54,10 @@ var gulpCustomTemplate = function(_opts) {
 };
 
 gulp.task('pages', function() {
-	return gulp.src(base + '/pages/**/*.html')
+	return gulp.src(gulpConfig.dirs.source + '/pages/**/*.html')
 		.pipe(gulpCustomTemplate({
 			layout: 'src/layouts/default.html'
 		}))
-		.pipe(gulp.dest(destdir))
+		.pipe(gulp.dest(gulpConfig.dest))
 		.pipe(livereload())
 });

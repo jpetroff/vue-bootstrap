@@ -1,7 +1,5 @@
 var gulp = require('gulp')
-var express = require('express')
 var livereload = require('gulp-livereload')
-var path = require('path')
 
 function run(gulpTask) {
 	return gulp.parallel(gulpTask);
@@ -17,13 +15,6 @@ function run(gulpTask) {
 
 gulp.task('watch', function(cb) {
 	livereload.listen();
-
-	// gulp.watch('/libs/js/*.js', {cwd: base}, run('js:libs') );
-
-	// gulp.watch([
-	// 	'js/**/*.js',
-	// 	'**/*.vue'
-	// ], {cwd: base}, run('js:app'));
 
 	gulp.watch([
 		'es6/**/*.js',

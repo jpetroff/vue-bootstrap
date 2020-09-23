@@ -1,4 +1,3 @@
-var gulp = require('gulp')
 var through = require('through2')
 var parse5 = require('parse5')
 var _ = require('underscore')
@@ -7,6 +6,7 @@ var File = require('vinyl')
 var templateValidate = require('vue-template-validator')
 var htmlMinifier = require('html-minifier')
 var escape = require('js-string-escape')
+var fspath = require('path')
 
 var defOptions = {
 	type: 'style',
@@ -21,6 +21,16 @@ var templateMinifyOptions = {
 	useShortDoctype: true,
 	removeEmptyAttributes: true,
 	removeOptionalTags: true
+}
+
+function getAttrFromNode(attrs, name) {
+	if (!_.isArray(attrs) || attrs.length == 0) return null;
+
+	var result = null;
+	_.each(attrs, (attr) => {
+		if(attr.name == name) result = String(attr.value).split(' ')[0];
+	});
+	return result;
 }
 
 var getContentFromNode = function getContentFromNode(node) {
@@ -54,7 +64,7 @@ processNode['style'] = function(node,path,base) {
 	var langExt = node.attrs['lang'] ? node.attrs['lang'] : 'css';
 
 	var cssObj = new File({
-		contents: new Buffer(node.content),
+		contents: new Buffer.from(node.content),
 		path: path.replace('.vue', '.'+langExt),
 		base: base
 	})
@@ -69,37 +79,36 @@ processNode['script'] = function(node,path,base) {
 	var langExt = node.attrs['lang'] ? node.attrs['lang'] : 'js';
 
 	var scriptObj = new File({
-		contents: new Buffer(node.content),
+		contents: new Buffer.from(node.content),
 		path: path.replace('.vue', '.'+langExt),
 		base: base
 	})
 
+	console.log(scriptObj.base, scriptObj.path);
 	return scriptObj;
 }
 
 var prepareTemplText = function(node, options) {
-	options = _.defaults(options, {minify: true})
+	options = _.defaults(options, {minify: true, parentClassShortcut: '§'})
 	var text = node.content
 
 	var warnings = templateValidate(text)
 	warnings.forEach(function(msg){
 		console.warn(msg)
-	})
+	});
+
+	// replace parentClassShortcut with component name
+	var mainClass = getAttrFromNode(node.attrs, 'class');
+	text = text.replace( new RegExp(options.parentClassShortcut, 'gi') , mainClass);
 
 	if (options.minify) {
 		text = htmlMinifier.minify(text, templateMinifyOptions)
 	} else {
 		text = text.split("\n").map(function(line){line.trim()}).join("\n")
 	}
-	return text
+	return text;
 }
 
-// var escapeForTemplate = function(text) {
-// 	text = escape(text)
-// 	text = JSON.stringify(text)
-// 	console.log(text);
-// 	return text.substr(1, text.length-2)
-// }
 
 processNode['template'] = function(node,path,base,options) {
 	options = options || {}
@@ -114,24 +123,25 @@ processNode['template'] = function(node,path,base,options) {
 
 	if (compilationType == 'html') {
 		templObj = new File({
-			contents: new Buffer(templText),
+			contents: new Buffer.from(templText),
 			path: path.replace('.vue', '.'+compilationType),
 			base: base
 		})
 	} else if (options.wrapper) {
 		var wrapper = _.template(options.wrapper)
 		templObj = new File({
-			contents: new Buffer(wrapper({text: escape(templText)})),
+			contents: new Buffer.from(wrapper({text: escape(templText)})),
 			path: path.replace('.vue', '.'+compilationType),
 			base: base
 		})
 	} else {
 		templObj = new File({
-			contents: new Buffer(templText),
+			contents: new Buffer.from(templText),
 			path: path.replace('.vue', '.'+compilationType),
 			base: base
 		})
 	}
+	console.log(templObj.base, templObj.path);
 	return templObj;
 }
 
@@ -146,11 +156,12 @@ processNode['merged-script'] = function(node, templateNode, path, base) {
 	var mergedScript = scriptText({template: escape(templText)})
 
 	var scriptObj = new File({
-		contents: new Buffer(mergedScript),
-		path: path.replace('.vue', '.'+langExt),
+		contents: new Buffer.from(mergedScript),
+		path: fspath.join( fspath.dirname(path), `index.${langExt}`),
 		base: base
 	})
 
+	console.log(scriptObj.base, scriptObj.path);
 	return scriptObj;
 }
 
@@ -160,10 +171,7 @@ module.exports = function(_options) {
 		if (file.isNull())
 			return callback(null, file)
 
-		// console.log(file)
-
 		if (/\.vue$/.test(file.path)) {
-			// console.log('is vue file')
 			var content = file.contents.toString("utf8")
 			var fragment = parse5.parseFragment(content, {
 				locationInfo: true
@@ -182,8 +190,6 @@ module.exports = function(_options) {
 			} else {
 				outputFile = processNode[options.type](nodes[options.type], filePath, fileBase, options)
 			}
-
-			// console.log(outputFile.path, outputFile.base)
 
 			callback(null, outputFile)
 

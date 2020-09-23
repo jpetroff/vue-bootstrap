@@ -1,19 +1,16 @@
 var gulp = require('gulp')
 var source = require('vinyl-source-stream')
 var uglify = require('gulp-uglify')
-var rename = require('gulp-rename')
 var concat = require('gulp-concat')
 var LessAutoprefix = require('less-plugin-autoprefix')
 var sourcemaps = require('gulp-sourcemaps')
 var less = require('gulp-less')
 var cache = require('gulp-cached')
-var vueSplit = require('gulp-vuesplit').default
-var order = require('gulp-order')
 var remember = require('gulp-remember')
 var vueExtract = require('./gulp-vue-extract')
-var wrapjs = require('./gulp-jswrapper')
 var print = require('gulp-print')
 var livereload = require('gulp-livereload')
+var touch = require('./gulp-touch')
 
 var browserify = require('browserify');
 var tsify = require('tsify');
@@ -23,9 +20,8 @@ var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 
 var vendors = ['underscore', 'promise-polyfill', 'whatwg-fetch'];
 if(['vue', 'vue/ts'].indexOf(gulpConfig.stack) != -1) vendors.push['vue'];
-if(['react', 'react/ts'].indexOf(gulpConfig.stack) != -1) vendors.push['react', 'react-dom'];
+if(['react', 'react/ts'].indexOf(gulpConfig.stack) != -1) vendors.push['react', 'react-dom', 'styled-components'];
 
-// done
 gulp.task('less', function(){
 	var lessConfig = {
 		paths: ['.'],
@@ -43,18 +39,19 @@ gulp.task('less', function(){
 	.pipe(concat('main.css'))
 	.pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(gulpConfig.dest + '/css'))
+	.pipe(touch())
 	.pipe(livereload());
 })
 
 gulp.task('assets', function() {
-	return gulp.src(__src + '/assets/**/*')
-		.pipe(gulp.dest(destdir))
+	return gulp.src(gulpConfig.dirs.root + '/assets/**/*')
+	.pipe(gulp.dest(gulpConfig.dest))
+	.pipe(touch())
 		.pipe(livereload());
 });
 
 
-//done
-gulp.task('--vue-extract-js', function() {
+gulp.task('vue-extract-js', function() {
 	return gulp.src([
 		gulpConfig.dirs.source + '/components/**/*.vue'
 	])
@@ -66,36 +63,14 @@ gulp.task('--vue-extract-js', function() {
 	}))
 	.pipe(remember('vue-js'))
 	.pipe(gulp.dest(gulpConfig.dirs.source + '/components'))
-});
-
-gulp.task('ts:all', function() {
-	return browserify({
-			basedir: '.',
-			debug: true,
-			entries: ['src/ts/main.ts'],
-			cache: {},
-			packageCache: {}
-		})
-		.plugin(tsify)
-		.transform('babelify', {
-				presets: ['es2015'],
-				extensions: ['.ts']
-		})
-		.bundle()
-		.pipe(source('bundle.js'))
-		.pipe(buffer())
-		.pipe(uglify())
-		.pipe(sourcemaps.init({loadMaps: true}))
-		.pipe(sourcemaps.write('./'))
-		.pipe(gulp.dest(gulpConfig.dest + '/ts'))
-		.pipe(livereload());
+	.pipe(touch())
 });
 
 var seriesPrefixJobs = [];
 switch(gulpConfig.stack) {
 	case 'vue':
 	case 'vue/ts':
-		seriesPrefixJobs = ['--vue-extract-js']; break;
+		seriesPrefixJobs = ['vue-extract-js']; break;
 }
 gulp.task('es6:app', gulp.series(...seriesPrefixJobs, function(cb) {
 
@@ -115,8 +90,6 @@ gulp.task('es6:app', gulp.series(...seriesPrefixJobs, function(cb) {
 		packageCache: {}
 	});
 
-	// console.log(gulpConfig.stack == 'react' || gulpConfig.stack == 'react/ts', babelPresets);
-
 	if(gulpConfig.ts) {
 		output.plugin(tsify, {target: 'es6'});
 	}
@@ -131,10 +104,11 @@ gulp.task('es6:app', gulp.series(...seriesPrefixJobs, function(cb) {
 	.pipe(sourcemaps.init({loadMaps: true}))
 	.pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(gulpConfig.dest + '/js'))
+	.pipe(touch())
 	.pipe(livereload());
 }));
 
-// done
+
 gulp.task('es6:libs', () => {
 	var bundle = browserify({
 		debug: true
@@ -152,6 +126,7 @@ gulp.task('es6:libs', () => {
 	.pipe(sourcemaps.init({loadMaps: true}))
 	.pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(gulpConfig.dest + '/js'))
+	.pipe(touch())
 });
 
 

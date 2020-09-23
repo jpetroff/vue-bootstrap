@@ -1,0 +1,26 @@
+<script lang="jsx">import
+React, 
+{ 
+	useState,
+	useEffect 
+} from 'react';
+
+function {{{component-name}}}() {
+	const [count, setCount] = useState(0);
+
+	return (
+		<div>
+			<p>You clicked {count} times</p>
+			<button onClick={() => setCount(count + 1)}>
+				Click me
+			</button>
+		</div>
+	);
+}
+
+
+{{{component-name}}}.displayName = '{{{component-name}}}';
+{{{component-name}}}.defaultProps = {};
+
+export default {{{component-name}}};
+</script>
