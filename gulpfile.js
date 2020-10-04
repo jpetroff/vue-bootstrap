@@ -1,11 +1,5 @@
-// global.__src = __dirname
-// global.base = __dirname + '/src';
-// global.out = __dirname + '/public';
-// global.live = __dirname + '/live';
-// global.live_dir = 'vue-bootstrap';
 global.PROD = (process.env.PROD == '1' || process.env.PROD == '2');
 global.LIVE = (process.env.PROD == '2');
-// global.destdir = LIVE ? live : out;
 
 var gulp = require('gulp');
 var path = require('path');
@@ -39,9 +33,9 @@ switch(gulpConfig.stack) {
 		buildSequence = ['es6:libs', 'es6:app', 'less', 'pages', 'assets']; break;
 	case 'vue/ts':
 		buildSequence = ['es6:libs', 'es6:app', 'less', 'pages', 'assets']; break;
-	case 'react': //@TODO
+	case 'react': 
 		buildSequence = ['es6:libs', 'es6:app', 'less', 'pages', 'assets']; break;
-	case 'react/ts': //@TODO
+	case 'react/ts': 
 		buildSequence = ['es6:libs', 'es6:app', 'less', 'pages', 'assets']; break;
 }
 

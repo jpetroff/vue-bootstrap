@@ -4,7 +4,7 @@
 		"build": "public",
 		"live": "live"
 	},
-	"stack": "react",
+	"stack": "react/ts",
 	"output": "dev",
 	"serverPath": ""
 }

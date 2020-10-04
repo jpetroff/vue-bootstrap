@@ -1,10 +1,10 @@
 {
-	"files": [
-			"src/ts/*.ts"
-	],
 	"compilerOptions": {
 			"noImplicitAny": true,
-			"target": "es5",
-			"moduleResolution": "node"
+			"target": "es6",
+			"moduleResolution": "node",
+			"esModuleInterop": true,
+			"jsx": "react",
+			"skipLibCheck": true
 	}
 }

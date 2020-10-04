@@ -11,16 +11,20 @@ var vueExtract = require('./gulp-vue-extract')
 var print = require('gulp-print')
 var livereload = require('gulp-livereload')
 var touch = require('./gulp-touch')
+var plumber = require('gulp-plumber')
+var watchify = require('watchify')
+var _ = require('underscore')
+var rememberify = require('./gulp-rememberify')
 
-var browserify = require('browserify');
-var tsify = require('tsify');
-var buffer = require('vinyl-buffer');
+var browserify = require('browserify')
+var tsify = require('tsify')
+var buffer = require('vinyl-buffer')
 
 var autoprefix = new LessAutoprefix({ browsers: ['last 2 versions']})
 
 var vendors = ['underscore', 'promise-polyfill', 'whatwg-fetch'];
-if(['vue', 'vue/ts'].indexOf(gulpConfig.stack) != -1) vendors.push['vue'];
-if(['react', 'react/ts'].indexOf(gulpConfig.stack) != -1) vendors.push['react', 'react-dom', 'styled-components'];
+if(['vue', 'vue/ts'].indexOf(gulpConfig.stack) != -1) vendors = _.union(vendors, ['vue']);
+if(['react', 'react/ts'].indexOf(gulpConfig.stack) != -1) vendors = _.union(vendors, ['react', 'react-dom', 'styled-components', 'react-transition-group', 'classnames']);
 
 gulp.task('less', function(){
 	var lessConfig = {
@@ -72,33 +76,53 @@ switch(gulpConfig.stack) {
 	case 'vue/ts':
 		seriesPrefixJobs = ['vue-extract-js']; break;
 }
-gulp.task('es6:app', gulp.series(...seriesPrefixJobs, function(cb) {
+var sourceExt = '.js';
+if(gulpConfig.stack == 'vue/ts') {sourceExt = '.ts'}
+else if(gulpConfig.stack == 'react') {sourceExt = '.jsx'}
+else if(gulpConfig.stack == 'react/ts') {sourceExt = '.tsx'}
 
-	var sourceExt = '.js';
-	if(gulpConfig.stack == 'vue/ts') {sourceExt = '.ts'}
-	else if(gulpConfig.stack == 'react') {sourceExt = '.jsx'}
-	else if(gulpConfig.stack == 'react/ts') {sourceExt = '.tsx'}
+var babelPresets = ['@babel/preset-env'];
+var babelPlugins = [];
+if(gulpConfig.stack == 'react' || gulpConfig.stack == 'react/ts') {
+	babelPresets.push('@babel/preset-react')
+	babelPlugins.push(['babel-plugin-styled-components', { displayName: true, fileName: false }])
+};
 
-	var babelPresets = ['@babel/preset-env'];
-	if(gulpConfig.stack == 'react' || gulpConfig.stack == 'react/ts') {babelPresets.push('@babel/preset-react')};
-
-	var output = browserify({
+global.jsBundle = browserify(
+	_.extend({}, {
 		basedir: '.',
 		debug: true,
 		entries: [`src/es6/main${sourceExt}`],
 		cache: {},
 		packageCache: {}
+	})
+);
+
+let tsConfigExt = {
+	target: 'es6'
+}
+if(gulpConfig.stack == 'react/js') tsConfigExt.jsx = 'react';
+if(gulpConfig.ts) {
+	jsBundle.plugin(tsify, tsConfigExt);
+}
+
+jsBundle.external(vendors) // Specify all vendors as external source
+	.transform('babelify', {
+			presets: babelPresets,
+			plugins: babelPlugins
 	});
 
-	if(gulpConfig.ts) {
-		output.plugin(tsify, {target: 'es6'});
-	}
+jsBundle.plugin(rememberify);
 
-	return output.external(vendors) // Specify all vendors as external source
-	.transform('babelify', {
-			presets: babelPresets
-	})
+gulp.task('es6:app', gulp.series(...seriesPrefixJobs, function(cb) {
+
+	return jsBundle
+	// .plugin(function(b) { console.log(_.keys(b._options.cache)); return b; })
 	.bundle()
+	.on('error', function (error) {
+		console.error(error.toString())
+		this.emit('end')
+	})
 	.pipe(source('app.js'))
 	.pipe(buffer())
 	.pipe(sourcemaps.init({loadMaps: true}))

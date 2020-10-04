@@ -1,5 +1,7 @@
 var gulp = require('gulp')
 var livereload = require('gulp-livereload')
+var rememberify = require('./gulp-rememberify')
+var path = require('path')
 
 function run(gulpTask) {
 	return gulp.parallel(gulpTask);
@@ -16,7 +18,7 @@ function run(gulpTask) {
 gulp.task('watch', function(cb) {
 	livereload.listen();
 
-	gulp.watch([
+	const jsWatcher = gulp.watch([
 		'es6/**/*.js',
 		'es6/**/*.jsx',
 		'es6/**/*.tsx',
@@ -25,6 +27,14 @@ gulp.task('watch', function(cb) {
 		'components/**/*.jsx',
 		'components/**/*.tsx',
 	], {cwd: gulpConfig.dirs.source}, run('es6:app'));
+
+	jsWatcher.on('change', (filePath, stats) => {
+		console.log('w ~ ', filePath, stats);
+		rememberify.forget(jsBundle, path.join(gulpConfig.dirs.source, filePath) );
+		// run('es6:app');
+	});
+
+	// jsWatcher.close();
 
 	gulp.watch([
 		'less/**/*.less',
