@@ -39,7 +39,7 @@ export const CaretWrapper = styled.div`
 		color: inherit;
 	}
 
-	&.active {
+	.active & {
 		transform: rotate(180deg);
 	}
 `;

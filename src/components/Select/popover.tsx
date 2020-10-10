@@ -1,9 +1,10 @@
-import React, { FunctionComponent, MouseEvent } from 'react';
+import React, { FunctionComponent, MouseEvent, useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { SelectOptionType } from './index';
 import { CSSTransition } from 'react-transition-group';
 import _ from 'underscore';
 import classNames from 'classnames';
+import { useReferredState } from '../Utils/index';
 
 
 const PopoverWrapper = styled.div`
@@ -44,6 +45,11 @@ const PopoverContainer = styled.div`
 	padding: 4px 0;
 	font-size: 14px;
 	color: #323232;
+	background-color: white;
+	overflow-x: hidden;
+	overflow-y: auto;
+	--webkit-overflow-scrolling: touch;
+	max-height: ${32 * 5}px;
 `;
 
 const PopoverUL = styled.ul`
@@ -55,7 +61,7 @@ const PopoverUL = styled.ul`
 const PopoverItem = styled.li`
 	padding: 8px 8px;
 
-	&:hover {
+	&.hover {
 		background-color: #f2f2f2;
 	}
 
@@ -74,29 +80,106 @@ export type PopoverProps = {
 	emptySearch? : string,
 	emptyOptions? : string,
 
-	onChange? : ( newValue : string | string[] ) => void
+	onChange? : ( newValue : string | string[], doClose? : boolean ) => void
+}
+
+function shiftCursorPosition(current : number, inc : number, length : number) {
+	console.log(current, inc, length);
+	if(current == -1 && inc != 0) {
+		return (inc < 0 ? length - 1 : 0);
+	} else if (current == 0 && inc < 0) {
+		return length - 1;
+	}
+	return (current + inc) % length;
 }
 
 export var Popover : FunctionComponent<PopoverProps> = function(props) {
+	const [cursorPosition, cursorPositionRef, setCursorPosition] = useReferredState<number>(-1);
+	const valueRef = useRef<string | string[] | null>(props.value);
+	useEffect( () => { valueRef.current = props.value } , [props.value]);
 
-	function onItemClick(event : MouseEvent, val : string) {
-		let newValue : string | string[];
-		if (props.multi) {
-			event.stopPropagation();
-			let valueIndex = props.value.indexOf(val);
-			if (valueIndex != -1) {
-				newValue = _.without(props.value, val);
+	const listRef = useRef();
+
+	function sendValue(newValue : string | string[] | null, forceClose? : boolean) {
+		let doClose = forceClose || (!props.multi);
+		let currentValue = valueRef.current;
+
+		var result : string | string[] | null;
+
+		if( !_.isNull(newValue) ) {
+			if(props.multi) {
+				// currentValue : array | null, newValue : string | null
+				if ( (_.isArray(currentValue) || _.isNull(currentValue)) && (_.isString(newValue) || _.isNull(newValue)) ) {
+	
+					let newValueIndex = currentValue.indexOf(newValue);
+					if (newValueIndex != -1) {
+						result = _.without(currentValue, newValue);
+					} else {
+						result = _.union(currentValue, [newValue]);
+					}
+					
+				// currentValue : array | null, newValue : array | null
+				} else if ( (_.isArray(currentValue) || _.isNull(currentValue)) && (_.isArray(newValue) || _.isNull(newValue)) ) {
+	
+					result = _.union(currentValue, newValue);
+	
+				// currentValue is not array
+				} else {
+					throw `Value for multiselect should be null or string[]`;
+				}
+
 			} else {
-				newValue = _.union(props.value, [val]);
+
+				result = String(newValue);
+
 			}
-		} else {
-			newValue = val;
 		}
 
-		props.onChange && props.onChange(newValue);
+		props.onChange && props.onChange(result || currentValue, doClose);
 	}
 
-	function checkSelectedItem(itemValue : string) : string {
+	function changeCursorPosition(inc : number) {
+		setCursorPosition( shiftCursorPosition(cursorPositionRef.current, inc, props.options.length) );
+	}
+
+	function onKeyNavigate(event : KeyboardEvent) : void {
+		if(event.code == 'ArrowDown') {
+			changeCursorPosition(1);
+		}
+		else if (event.code == 'ArrowUp') {
+			changeCursorPosition(-1);
+		} 
+		else if (event.code == 'Escape') {
+			sendValue(null, true);
+		}
+		else if (event.code == 'Enter' || event.code == 'Space') {
+			sendValue(props.options[cursorPositionRef.current].value);
+		}
+	}
+
+	useEffect( 
+		() => {
+			if(props.show) {
+				window.addEventListener('keydown', onKeyNavigate);
+			}
+			return () => {
+				console.log('key listener removed');
+				window.removeEventListener('keydown', onKeyNavigate);
+			}
+		},
+		[props.show, listRef]
+	);
+
+	function onItemClick(event : MouseEvent, val : string) {
+		event.stopPropagation();
+		sendValue(val);
+	}
+
+	function onItemHover(event: MouseEvent, index : number) {
+		setCursorPosition(index);
+	}
+
+	function checkSelectedItem(itemValue : string, index : number) : string {
 		let isSelected : boolean;
 		if(props.multi) {
 			isSelected = props.value.indexOf(itemValue) != -1;
@@ -104,7 +187,8 @@ export var Popover : FunctionComponent<PopoverProps> = function(props) {
 			isSelected = props.value == itemValue;
 		}
 		return classNames({
-			'selected': isSelected
+			'selected': isSelected,
+			'hover': cursorPosition == index
 		});
 	}
 
@@ -114,11 +198,12 @@ export var Popover : FunctionComponent<PopoverProps> = function(props) {
 				<PopoverContainer>
 					<PopoverUL>
 					{
-						(props.options as SelectOptionType[]).map( (item : SelectOptionType, index : Number) =>
+						(props.options as SelectOptionType[]).map( (item : SelectOptionType, index : number) =>
 							<PopoverItem
-								className={checkSelectedItem(item.value)}
+								className={checkSelectedItem(item.value, index)}
 								key={index.toString()}
 								onClick={e => onItemClick(e, item.value)}
+								onMouseEnter={e => onItemHover(e, index)}
 							>
 								{item.text}
 							</PopoverItem>

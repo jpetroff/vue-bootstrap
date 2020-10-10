@@ -125,8 +125,8 @@ gulp.task('es6:app', gulp.series(...seriesPrefixJobs, function(cb) {
 	})
 	.pipe(source('app.js'))
 	.pipe(buffer())
-	.pipe(sourcemaps.init({loadMaps: true}))
-	.pipe(sourcemaps.write('./'))
+	// .pipe(sourcemaps.init({loadMaps: true}))
+	// .pipe(sourcemaps.write('./'))
 	.pipe(gulp.dest(gulpConfig.dest + '/js'))
 	.pipe(touch())
 	.pipe(livereload());

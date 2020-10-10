@@ -18,37 +18,8 @@ import {
 import _ from 'underscore';
 import { Popover } from './popover';
 import classNames from 'classnames';
+import { useOnClickOutside } from '../Utils/index';
 
-// Hook
-function useOnClickOutside(ref : RefObject<HTMLDivElement>, handler : (event? : Event) => void) {
-	useEffect(
-		() => {
-			const listener : (event: Event) => void = function(event) {
-				// Do nothing if clicking ref's element or descendent elements
-				if (!ref.current || ref.current.contains(event.target as Node)) {
-					return;
-				}
-
-				handler(event);
-			};
-
-			window.addEventListener('mousedown', listener);
-			window.addEventListener('touchstart', listener);
-
-			return () => {
-				document.removeEventListener('mousedown', listener);
-				document.removeEventListener('touchstart', listener);
-			};
-		},
-		// Add ref and handler to effect dependencies
-		// It's worth noting that because passed in handler is a new ...
-		// ... function on every render that will cause this effect ...
-		// ... callback/cleanup to run every render. It's not a big deal ...
-		// ... but to optimize you can wrap handler in useCallback before ...
-		// ... passing it into this hook.
-		[ref, handler]
-	);
-}
 
 export type SelectOptionType = {
 	value: string,
@@ -69,7 +40,7 @@ export type SelectProps = {
 	emptySearch? : string,
 	emptyOptions? : string,
 
-	onChange? : ( newValue : string | string[] ) => void,
+	onChange? : ( newValue : string | string[], doClose? : boolean ) => void,
 
 }
 
@@ -82,12 +53,13 @@ export var Select : FunctionComponent<SelectProps> = function(props) {
 		setActive(false);
 	});
 
-	function onChange(val : string | string[]) {
+	function onChange(val : string | string[], doClose? : boolean) {
 		props.onChange && props.onChange(val);
+		if(doClose) setActive(false);
 	}
 
 	return (
-		<div>
+		<div className={classNames('select', {'active': active})}>
 			{props.label && <InputLabel>{props.label}</InputLabel>}
 			<InputWrapper ref={inputRef} onClick={() => setActive(!active)}>
 				<ValueWrapper>
@@ -96,7 +68,7 @@ export var Select : FunctionComponent<SelectProps> = function(props) {
 						<div>{props.value}</div>
 					}
 				</ValueWrapper>
-				<CaretWrapper className={classNames({'active': active})}>
+				<CaretWrapper>
 					<CaretDown />
 				</CaretWrapper>
 				<Popover onChange={onChange} multi={props.multi} show={active} options={props.options} value={props.value} />

@@ -18,20 +18,28 @@ const appOptions = [
 	{value: '2', text: 'option 2'},
 	{value: '3', text: 'option 3'},
 	{value: '4', text: 'option 4'},
+	{value: '5', text: 'option 5'},
+	{value: '6', text: 'option 6'},
+	{value: '7', text: 'option 7'},
+	{value: '8', text: 'option 8'},
 ]
 
 function App() {
-	const [selectValue, setSelectValue] = useState<string | string[]>('');
-
-	function handleInput(value : string | string[]) {
-		console.log(value);
-		setSelectValue(value);
-	}
+	const [selectFirst, setSelectFirst] = useState<string | string[]>(null);
+	const [selectSecond, setSelectSecond] = useState<string | string[]>([]);
 	
 	return (
 		<Wrapper>
-			<Select label="Test fdfs" value={selectValue} options={appOptions} onChange={handleInput}>
-			</Select>
+			<Select
+				label="First"
+				value={selectFirst}
+				options={appOptions}
+				onChange={(val) => setSelectFirst(val)} />
+			<Select multi
+				label="Second"
+				value={selectSecond}
+				options={appOptions}
+				onChange={(val) => setSelectSecond(val)} />
 		</Wrapper> 
 	);
 }
