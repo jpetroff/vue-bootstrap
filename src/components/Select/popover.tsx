@@ -93,7 +93,7 @@ function shiftCursorPosition(current : number, inc : number, length : number) {
 	return (current + inc) % length;
 }
 
-export var Popover : FunctionComponent<PopoverProps> = function(props) {
+export const Popover : FunctionComponent<PopoverProps> = function(props : PopoverProps) {
 	const [cursorPosition, cursorPositionRef, setCursorPosition] = useReferredState<number>(-1);
 	const valueRef = useRef<string | string[] | null>(props.value);
 	useEffect( () => { valueRef.current = props.value } , [props.value]);
@@ -104,7 +104,7 @@ export var Popover : FunctionComponent<PopoverProps> = function(props) {
 		let doClose = forceClose || (!props.multi);
 		let currentValue = valueRef.current;
 
-		var result : string | string[] | null;
+		let result : string | string[] | null;
 
 		if( !_.isNull(newValue) ) {
 			if(props.multi) {
