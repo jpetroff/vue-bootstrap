@@ -51,7 +51,7 @@
     "typescript": "^3.9.7",
     "uglify": "^0.1.5",
     "uglify-js": "^2.8.29",
-    "underscore": "^1.11.0",
+    "underscore": "^1.12.1",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0",
     "watchify": "^3.11.1",
